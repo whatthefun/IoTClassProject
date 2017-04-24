@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">IoTClassProject</string>
+    <string name="ble_not_supported">未支援</string>
+</resources>
