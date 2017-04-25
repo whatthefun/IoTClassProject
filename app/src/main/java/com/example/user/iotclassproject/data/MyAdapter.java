@@ -15,10 +15,16 @@ import java.util.List;
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.myViewHolder> {
 
+    final private ListItemClickListener mOnListItemClickListener;
     private List<BluetoothDevice> mDataList;
 
-    public MyAdapter(List<BluetoothDevice> dataList){
+    public interface ListItemClickListener{
+        void onListItemClickListener(int position);
+    }
+
+    public MyAdapter(List<BluetoothDevice> dataList, ListItemClickListener listItemClickListener){
         this.mDataList = dataList;
+        mOnListItemClickListener = listItemClickListener;
     }
 
     @Override public myViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -28,20 +34,35 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.myViewHolder> {
     }
 
     @Override public void onBindViewHolder(myViewHolder holder, int position) {
-        holder.txtDevice.setText(mDataList.get(position).getName());
+        holder.txtDevice.setText(mDataList.get(position).getAddress());
+        holder.txtName.setText(mDataList.get(position).getName());
+
     }
 
     @Override public int getItemCount() {
-        return mDataList.size();
+        if (mDataList != null)
+            return mDataList.size();
+        else
+            return 0;
     }
 
-    public class myViewHolder extends RecyclerView.ViewHolder{
+    public class myViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
-        public TextView txtDevice;
+        public TextView txtDevice, txtName;
+        //public LinearLayout item;
 
         public myViewHolder(View itemView) {
             super(itemView);
             txtDevice = (TextView) itemView.findViewById(R.id.txtDevice);
+            txtName = (TextView) itemView.findViewById(R.id.txtName);
+            itemView.setOnClickListener(this);
+        }
+
+        @Override public void onClick(View v) {
+            int clickedPosition = getAdapterPosition();
+            mOnListItemClickListener.onListItemClickListener(clickedPosition);
         }
     }
+
+
 }
