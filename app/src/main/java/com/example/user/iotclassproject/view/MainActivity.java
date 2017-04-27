@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,7 +16,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -27,6 +25,7 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements MyAdapter.ListItemClickListener{
 
+    private final static String TAG = MainActivity.class.getSimpleName();
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 11;
     private static final int REQUEST_ENABLE_BT = 12;
     private static final long SCAN_PERIOD = 10000;
@@ -36,7 +35,7 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
     private Handler mHandler;
     private Button btnScan;
     private MyAdapter adapter;
-    private BluetoothGatt mBluetoothGatt;
+
     
 
     @Override protected void onCreate(Bundle savedInstanceState) {
@@ -147,10 +146,11 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Log.d("main", "callback");
-                        Log.d("callback", scanRecord.toString());
+                        //Log.d("main", "callback");
+                        //Log.d("callback", scanRecord.toString());
                         mDataList.add(device);
                         adapter.notifyDataSetChanged();
+
                     }
                 });
             }
@@ -158,8 +158,13 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
 
     @Override public void onListItemClickListener(int position) {
         Toast.makeText(MainActivity.this, position + "", Toast.LENGTH_SHORT).show();
+        BluetoothDevice device = mDataList.get(position);
         Intent intent = new Intent(this, BleInfoActivity.class);
-        intent.putExtra("data", mDataList.get(position));
+        intent.putExtra("MAC", device.getAddress());
+        intent.putExtra("Name", device.getName());
+        //intent.putExtra("UUID", device.getUuids().toString());
+
+
         if (mScanning) {
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
             mScanning = false;

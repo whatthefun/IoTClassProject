@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">IoTClassProject</string>
     <string name="ble_not_supported">未支援</string>
+    <string name="menu_connect">連線</string>
+    <string name="menu_disconnect">斷線</string>
+    <string name="connected">已連線</string>
+    <string name="disconnected">已斷線</string>
 </resources>
