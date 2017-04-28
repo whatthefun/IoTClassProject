@@ -73,6 +73,7 @@ public class BleInfoActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.gatt_services, menu);
+        Log.d(TAG, "onCreateOptionsMenu");
         if (mConnected) {
             menu.findItem(R.id.menu_connect).setVisible(false);
             menu.findItem(R.id.menu_disconnect).setVisible(true);
@@ -85,6 +86,7 @@ public class BleInfoActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d(TAG, "onOptionsItemSelected");
         switch(item.getItemId()) {
             case R.id.menu_connect:
                 mBluetoothLeService.connect(mDeviceAddress);
@@ -138,9 +140,11 @@ public class BleInfoActivity extends AppCompatActivity {
                 displayGattServices(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
                 //displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-            } else if (BluetoothLeService.ACTION_RSSI_CHANGE.equals(action)) {
-
             }
+            //else if (BluetoothLeService.ACTION_RSSI_CHANGE.equals(action)) {
+            //    int rssi = intent.getIntExtra("Rssi", 0);
+            //    txtConnectState.setText(rssi + "");
+            //}
         }
     };
 
@@ -204,7 +208,7 @@ public class BleInfoActivity extends AppCompatActivity {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
-        intentFilter.addAction(BluetoothLeService.ACTION_RSSI_CHANGE);
+        //intentFilter.addAction(BluetoothLeService.ACTION_RSSI_CHANGE);
         return intentFilter;
     }
 }

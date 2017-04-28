@@ -43,8 +43,8 @@ public class BluetoothLeService extends Service {
         "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE =
         "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
-    public final static String ACTION_RSSI_CHANGE =
-        "com.example.bluetooth.le.ACTION_RSSI_CHANGE";
+    //public final static String ACTION_RSSI_CHANGE =
+    //    "com.example.bluetooth.le.ACTION_RSSI_CHANGE";
     public final static String EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA";
 
     public final static UUID UUID_HEART_RATE_MEASUREMENT = UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
@@ -95,7 +95,7 @@ public class BluetoothLeService extends Service {
 
         @Override public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             super.onReadRemoteRssi(gatt, rssi, status);
-            broadcastUpdate(ACTION_RSSI_CHANGE);
+            //broadcastUpdate(ACTION_RSSI_CHANGE);
         }
     };
 
@@ -147,30 +147,17 @@ public class BluetoothLeService extends Service {
         mBluetoothGatt = null;
     }
 
-    //@Override
-    // New services discovered
-    public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-        if (status == BluetoothGatt.GATT_SUCCESS) {
-            broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
-        } else {
-            Log.w(TAG, "onServicesDiscovered received: " + status);
-        }
-    }
-
-    //@Override
-    // Result of a characteristic read operation
-    public void onCharacteristicRead(BluetoothGatt gatt,
-        BluetoothGattCharacteristic characteristic,
-        int status) {
-        if (status == BluetoothGatt.GATT_SUCCESS) {
-            broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
-        }
-    }
-
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
         sendBroadcast(intent);
     }
+
+    //private void broadcastUpdate(final String action, int rssi){
+    //    final Intent intent = new Intent(action);
+    //    intent.putExtra("Rssi", rssi);
+    //    Log.d(TAG, "rssiUpdate");
+    //    sendBroadcast(intent);
+    //}
 
     private void broadcastUpdate(final String action,
         final BluetoothGattCharacteristic characteristic) {

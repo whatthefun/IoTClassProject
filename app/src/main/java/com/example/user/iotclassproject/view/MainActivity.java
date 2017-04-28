@@ -89,7 +89,6 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
 
-        requestEnableBLE();
         mHandler = new Handler();
     }
 
@@ -157,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
         };
 
     @Override public void onListItemClickListener(int position) {
-        Toast.makeText(MainActivity.this, position + "", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(MainActivity.this, position + "", Toast.LENGTH_SHORT).show();
         BluetoothDevice device = mDataList.get(position);
         Intent intent = new Intent(this, BleInfoActivity.class);
         intent.putExtra("MAC", device.getAddress());
