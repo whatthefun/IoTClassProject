@@ -29,7 +29,7 @@ import java.util.List;
 public class BleInfoActivity extends AppCompatActivity {
 
     private final static String TAG = BleInfoActivity.class.getSimpleName();
-    private TextView txtConnectState;
+    private TextView txtConnectState, txtUUID;
     private boolean mConnected = false;
     private BluetoothLeService mBluetoothLeService;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
@@ -45,7 +45,7 @@ public class BleInfoActivity extends AppCompatActivity {
         mDeviceAddress = intent.getStringExtra("MAC");
         ((TextView) findViewById(R.id.txtMAC)).setText(mDeviceAddress);
         //String UUID = intent.getStringExtra("UUID");
-        //((TextView) findViewById(R.id.txtUUID)).setText(UUID);
+        txtUUID =  (TextView) findViewById(R.id.txtUUID);
         txtConnectState =  (TextView) findViewById(R.id.txtConnectState);
         txtConnectState.setText(R.string.disconnected);
 
@@ -152,12 +152,12 @@ public class BleInfoActivity extends AppCompatActivity {
         if (gattServices == null) return;
         String uuid = null;
         //String unknownServiceString = getResources().getString(R.string.unknown_service);
-        //String unknownCharaString = getResources().getString(R.string.unknown_characteristic);
+        //String unknownCharaString = getResources().getString(R.string.unknown_characteristic);onCharacteristicReadonCharacteristicReadonCharacteristicRead
         ArrayList<HashMap<String, String>> gattServiceData = new ArrayList<HashMap<String, String>>();
         ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicData
             = new ArrayList<ArrayList<HashMap<String, String>>>();
         mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
-
+//// TODO: 2017/04/29 here
         // Loops through available GATT Services.
         for (BluetoothGattService gattService : gattServices) {
             HashMap<String, String> currentServiceData = new HashMap<String, String>();
@@ -185,7 +185,11 @@ public class BleInfoActivity extends AppCompatActivity {
             }
             mGattCharacteristics.add(charas);
             gattCharacteristicData.add(gattCharacteristicGroupData);
+            txtUUID.setText(uuid);
+
+
         }
+
 
         //SimpleExpandableListAdapter gattServiceAdapter = new SimpleExpandableListAdapter(
         //    this,
