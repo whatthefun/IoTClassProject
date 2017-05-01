@@ -47,7 +47,8 @@ public class BluetoothLeService extends Service {
     //    "com.example.bluetooth.le.ACTION_RSSI_CHANGE";
     public final static String EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA";
 
-    public final static UUID UUID_HEART_RATE_MEASUREMENT = UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
+    public final static UUID UUID_HEART_RATE_MEASUREMENT =
+        UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
 
     // Various callback methods defined by the BLE API.
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -92,6 +93,8 @@ public class BluetoothLeService extends Service {
         @Override public void onCharacteristicWrite(BluetoothGatt gatt,
             BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
+            Log.d(TAG, "onCharacteristicWrite");
+
         }
 
         @Override public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
@@ -185,14 +188,13 @@ public class BluetoothLeService extends Service {
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
                 final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for(byte byteChar : data)
+                for (byte byteChar : data)
                     stringBuilder.append(String.format("%02X ", byteChar));
                 intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
             }
         }
         sendBroadcast(intent);
     }
-
 
     public List<BluetoothGattService> getSupportedGattServices() {
         if (mBluetoothGatt == null) return null;
@@ -218,6 +220,24 @@ public class BluetoothLeService extends Service {
         }
 
         return true;
+    }
+
+    public void instruction(Boolean isOn) {
+        mBluetoothGatt.beginReliableWrite();
+        mBluetoothGatt.getService()
+    }
+
+    public byte[] toBytes(boolean[] input) {
+        byte[] toReturn = new byte[input.length / 8];
+        for (int entry = 0; entry < toReturn.length; entry++) {
+            for (int bit = 0; bit < 8; bit++) {
+                if (input[entry * 8 + bit]) {
+                    toReturn[entry] |= (128 >> bit);
+                }
+            }
+        }
+
+        return toReturn;
     }
 
     public IBinder onBind(Intent intent) {

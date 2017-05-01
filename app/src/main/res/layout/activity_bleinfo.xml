@@ -64,4 +64,12 @@
         android:layout_toRightOf="@+id/connectState"
         android:layout_alignTop="@+id/connectState"
         />
+    <Switch
+        android:id="@+id/opener"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/connectState"
+        android:text="開關"
+        />
+
 </RelativeLayout>

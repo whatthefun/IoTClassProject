@@ -14,6 +14,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import com.example.user.iotclassproject.BluetoothLeService;
 import com.example.user.iotclassproject.R;
@@ -30,6 +32,7 @@ public class BleInfoActivity extends AppCompatActivity {
 
     private final static String TAG = BleInfoActivity.class.getSimpleName();
     private TextView txtConnectState, txtUUID;
+    private Switch opener;
     private boolean mConnected = false;
     private BluetoothLeService mBluetoothLeService;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
@@ -58,6 +61,14 @@ public class BleInfoActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
+        opener = (Switch) findViewById(R.id.opener);
+        opener.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                //mBluetoothLeService.instruction(isChecked);
+                Log.d(TAG, mGattCharacteristics.get(0).get(0).getValue().toString());
+            }
+        });
     }
 
     @Override protected void onResume() {
