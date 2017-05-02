@@ -163,8 +163,7 @@ public class BluetoothLeService extends Service {
     //    sendBroadcast(intent);
     //}
 
-    private void broadcastUpdate(final String action,
-        final BluetoothGattCharacteristic characteristic) {
+    private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
 
         // This is special handling for the Heart Rate Measurement profile.  Data parsing is
@@ -224,7 +223,7 @@ public class BluetoothLeService extends Service {
 
     public void instruction(Boolean isOn) {
         mBluetoothGatt.beginReliableWrite();
-        mBluetoothGatt.getService()
+
     }
 
     public byte[] toBytes(boolean[] input) {

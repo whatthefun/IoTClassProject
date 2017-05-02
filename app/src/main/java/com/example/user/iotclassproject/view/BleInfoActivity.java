@@ -65,8 +65,11 @@ public class BleInfoActivity extends AppCompatActivity {
         opener = (Switch) findViewById(R.id.opener);
         opener.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                //mBluetoothLeService.instruction(isChecked);
-                Log.d(TAG, mGattCharacteristics.get(0).get(0).getValue().toString());
+                Log.d(TAG, mGattCharacteristics.size() + "");
+                //Log.d(TAG, String.valueOf(.getPermissions() == BluetoothGattCharacteristic.PERMISSION_WRITE));
+
+                mBluetoothLeService.sendBroadcast("setdata",mGattCharacteristics.get(0).get(0));
+
             }
         });
     }
