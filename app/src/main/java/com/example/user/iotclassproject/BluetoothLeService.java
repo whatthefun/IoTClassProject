@@ -221,9 +221,20 @@ public class BluetoothLeService extends Service {
         return true;
     }
 
-    public void instruction(Boolean isOn) {
-        mBluetoothGatt.beginReliableWrite();
+    public void readCharacteristic(BluetoothGattCharacteristic characteristic) {
+        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
+            Log.w(TAG, "BluetoothAdapter not initialized");
+            return;
+        }
+        mBluetoothGatt.readCharacteristic(characteristic);
+    }
 
+    public void writeCharacteristic(BluetoothGattCharacteristic value) {
+        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
+            Log.w(TAG, "BluetoothAdapter not initialized");
+            return;
+        }
+        mBluetoothGatt.writeCharacteristic(value);
     }
 
     public byte[] toBytes(boolean[] input) {

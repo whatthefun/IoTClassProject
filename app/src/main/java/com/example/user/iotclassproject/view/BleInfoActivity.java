@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.example.user.iotclassproject.BluetoothLeService.EXTRA_DATA;
+
 /**
  * Created by YUAN on 2017/04/25.
  */
@@ -65,13 +67,24 @@ public class BleInfoActivity extends AppCompatActivity {
         opener = (Switch) findViewById(R.id.opener);
         opener.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Log.d(TAG, mGattCharacteristics.size() + "");
-                //Log.d(TAG, String.valueOf(.getPermissions() == BluetoothGattCharacteristic.PERMISSION_WRITE));
+                int i = (isChecked) ? 1:0;
+                byte b[] = new byte[4];
 
-                mBluetoothLeService.sendBroadcast("setdata",mGattCharacteristics.get(0).get(0));
+                b[0] = (byte)( (i & 0xff000000) >>> 24);
+                b[1] = (byte)( (i & 0x00ff0000) >>> 16);
+                b[2] = (byte)( (i & 0x0000ff00) >>> 8);
+                b[3] = (byte)( (i & 0x000000ff) );
 
+                mGattCharacteristics.get(2).get(0).setValue(b);
+                mBluetoothLeService.writeCharacteristic(mGattCharacteristics.get(2).get(0));
             }
         });
+    }
+    private String byteArrayToHex(byte[] a) {
+        StringBuilder sb = new StringBuilder(a.length * 2);
+        for (byte b : a)
+            sb.append(String.format("%02x", b));
+        return sb.toString();
     }
 
     @Override protected void onResume() {
@@ -153,7 +166,9 @@ public class BleInfoActivity extends AppCompatActivity {
                 // user interface.
                 displayGattServices(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                //displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+                String tmp = (String)intent.getExtras().get(EXTRA_DATA);
+                Log.d("data", "111" + tmp + "111");
+                setSwitch(Integer.valueOf(tmp.substring(0, 1)));
             }
             //else if (BluetoothLeService.ACTION_RSSI_CHANGE.equals(action)) {
             //    int rssi = intent.getIntExtra("Rssi", 0);
@@ -162,11 +177,19 @@ public class BleInfoActivity extends AppCompatActivity {
         }
     };
 
+    private void setSwitch(int isOn){
+        Log.d("setSwitch", isOn + "");
+        if (isOn == 0){
+            opener.setChecked(false);
+        }else if(isOn == 1){
+            opener.setChecked(true);
+        }
+    }
+
     private void displayGattServices(List<BluetoothGattService> gattServices) {
         if (gattServices == null) return;
         String uuid = null;
-        //String unknownServiceString = getResources().getString(R.string.unknown_service);
-        //String unknownCharaString = getResources().getString(R.string.unknown_characteristic);onCharacteristicReadonCharacteristicReadonCharacteristicRead
+
         ArrayList<HashMap<String, String>> gattServiceData = new ArrayList<HashMap<String, String>>();
         ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicData
             = new ArrayList<ArrayList<HashMap<String, String>>>();
@@ -200,10 +223,13 @@ public class BleInfoActivity extends AppCompatActivity {
             mGattCharacteristics.add(charas);
             gattCharacteristicData.add(gattCharacteristicGroupData);
             txtUUID.setText(uuid);
-
-
         }
 
+        final BluetoothGattCharacteristic characteristic = mGattCharacteristics.get(2).get(0);
+        final int charaProp = characteristic.getProperties();
+        if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+            mBluetoothLeService.readCharacteristic(characteristic);
+        }
 
         //SimpleExpandableListAdapter gattServiceAdapter = new SimpleExpandableListAdapter(
         //    this,
