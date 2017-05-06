@@ -9,8 +9,10 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -43,8 +45,8 @@ public class BluetoothLeService extends Service {
         "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE =
         "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
-    //public final static String ACTION_RSSI_CHANGE =
-    //    "com.example.bluetooth.le.ACTION_RSSI_CHANGE";
+    public final static String ACTION_BONDED =
+        "com.example.bluetooth.le.ACTION_DONDED";
     public final static String EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA";
 
     public final static UUID UUID_HEART_RATE_MEASUREMENT =
@@ -75,6 +77,9 @@ public class BluetoothLeService extends Service {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
+
+                IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+                registerReceiver(mReceiver, filter);
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
             }
@@ -84,9 +89,15 @@ public class BluetoothLeService extends Service {
         // Result of a characteristic read operation
         public void onCharacteristicRead(BluetoothGatt gatt,
             BluetoothGattCharacteristic characteristic, int status) {
-            // TODO: 2017/04/29  
+
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+
+            }else if(BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION == status ||
+                BluetoothGatt.GATT_INSUFFICIENT_ENCRYPTION == status) {
+
+                IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+                registerReceiver(mReceiver, filter);
             }
         }
 
@@ -97,10 +108,6 @@ public class BluetoothLeService extends Service {
 
         }
 
-        @Override public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-            super.onReadRemoteRssi(gatt, rssi, status);
-            //broadcastUpdate(ACTION_RSSI_CHANGE);
-        }
     };
 
     public boolean connect(final String address) {
@@ -156,12 +163,6 @@ public class BluetoothLeService extends Service {
         sendBroadcast(intent);
     }
 
-    //private void broadcastUpdate(final String action, int rssi){
-    //    final Intent intent = new Intent(action);
-    //    intent.putExtra("Rssi", rssi);
-    //    Log.d(TAG, "rssiUpdate");
-    //    sendBroadcast(intent);
-    //}
 
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
@@ -237,18 +238,36 @@ public class BluetoothLeService extends Service {
         mBluetoothGatt.writeCharacteristic(value);
     }
 
-    public byte[] toBytes(boolean[] input) {
-        byte[] toReturn = new byte[input.length / 8];
-        for (int entry = 0; entry < toReturn.length; entry++) {
-            for (int bit = 0; bit < 8; bit++) {
-                if (input[entry * 8 + bit]) {
-                    toReturn[entry] |= (128 >> bit);
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            final String action = intent.getAction();
+
+            if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED))
+            {
+                final int state = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
+                Log.d(TAG, "Bond State Change...");
+                switch(state){
+                    case BluetoothDevice.BOND_BONDING:
+                        // Bonding...
+                        break;
+
+                    case BluetoothDevice.BOND_BONDED:
+                        // Bonded...
+                        Log.d(TAG, "Bonded");
+                        unregisterReceiver(mReceiver);
+                        broadcastUpdate(ACTION_BONDED);
+                        break;
+
+                    case BluetoothDevice.BOND_NONE:
+                        // Not bonded...
+                        break;
                 }
             }
         }
-
-        return toReturn;
-    }
+    };
 
     public IBinder onBind(Intent intent) {
         return mBinder;

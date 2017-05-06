@@ -113,8 +113,6 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
         }
     }
 
-    // TODO: 2017/04/23 收到藍芽關掉的廣播也要把scan關掉 
-
     private void scanLeDevice(final boolean enable) {
         if (enable) {
             // Stops scanning after a pre-defined scan period.
@@ -137,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
         }
     }
 
+    // TODO: 2017/05/05  1.將搜尋到的BLE放進List 
     private BluetoothAdapter.LeScanCallback mLeScanCallback =
         new BluetoothAdapter.LeScanCallback() {
             @Override

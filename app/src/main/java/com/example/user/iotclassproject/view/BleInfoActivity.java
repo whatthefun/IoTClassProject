@@ -14,8 +14,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.CompoundButton;
-import android.widget.Switch;
+import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import com.example.user.iotclassproject.BluetoothLeService;
 import com.example.user.iotclassproject.R;
@@ -34,12 +34,13 @@ public class BleInfoActivity extends AppCompatActivity {
 
     private final static String TAG = BleInfoActivity.class.getSimpleName();
     private TextView txtConnectState, txtUUID;
-    private Switch opener;
+    private ImageButton btnOpener;
     private boolean mConnected = false;
     private BluetoothLeService mBluetoothLeService;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
         new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     private String mDeviceAddress;
+    private int isOn = 0;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,27 +65,26 @@ public class BleInfoActivity extends AppCompatActivity {
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
-        opener = (Switch) findViewById(R.id.opener);
-        opener.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                int i = (isChecked) ? 1:0;
+        btnOpener = (ImageButton) findViewById(R.id.btnOpener);
+        btnOpener.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                int i = (isOn == 0) ? 1:0;
+                setSwitch(i);
                 byte b[] = new byte[4];
 
                 b[0] = (byte)( (i & 0xff000000) >>> 24);
                 b[1] = (byte)( (i & 0x00ff0000) >>> 16);
                 b[2] = (byte)( (i & 0x0000ff00) >>> 8);
                 b[3] = (byte)( (i & 0x000000ff) );
+                isOn = i;
+                Log.d("123",  mGattCharacteristics.size() + "");
+                mGattCharacteristics.get(mGattCharacteristics.size() -1).get(0).setValue(b);
+                mBluetoothLeService.writeCharacteristic(mGattCharacteristics.get(mGattCharacteristics.size() -1).get(0));
 
-                mGattCharacteristics.get(2).get(0).setValue(b);
-                mBluetoothLeService.writeCharacteristic(mGattCharacteristics.get(2).get(0));
             }
         });
-    }
-    private String byteArrayToHex(byte[] a) {
-        StringBuilder sb = new StringBuilder(a.length * 2);
-        for (byte b : a)
-            sb.append(String.format("%02x", b));
-        return sb.toString();
+
+
     }
 
     @Override protected void onResume() {
@@ -158,6 +158,7 @@ public class BleInfoActivity extends AppCompatActivity {
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {//已斷線
                 mConnected = false;
                 txtConnectState.setText(R.string.disconnected);
+                mBluetoothLeService.close();
                 invalidateOptionsMenu();
                 //clearUI();
             } else if (BluetoothLeService.
@@ -168,7 +169,14 @@ public class BleInfoActivity extends AppCompatActivity {
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
                 String tmp = (String)intent.getExtras().get(EXTRA_DATA);
                 Log.d("data", "111" + tmp + "111");
-                setSwitch(Integer.valueOf(tmp.substring(0, 1)));
+                try {
+                    setSwitch(Integer.valueOf(tmp.substring(2, tmp.length()-1)));
+                }catch (Exception e){
+                    Log.e(TAG, e.toString());
+                }
+
+            }else if (BluetoothLeService.ACTION_BONDED.equals(action)){
+                mBluetoothLeService.connect(mDeviceAddress);
             }
             //else if (BluetoothLeService.ACTION_RSSI_CHANGE.equals(action)) {
             //    int rssi = intent.getIntExtra("Rssi", 0);
@@ -180,9 +188,9 @@ public class BleInfoActivity extends AppCompatActivity {
     private void setSwitch(int isOn){
         Log.d("setSwitch", isOn + "");
         if (isOn == 0){
-            opener.setChecked(false);
+            btnOpener.setImageResource(R.drawable.stop);
         }else if(isOn == 1){
-            opener.setChecked(true);
+            btnOpener.setImageResource(R.drawable.ok);
         }
     }
 
@@ -194,7 +202,7 @@ public class BleInfoActivity extends AppCompatActivity {
         ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicData
             = new ArrayList<ArrayList<HashMap<String, String>>>();
         mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
-//// TODO: 2017/04/29 here
+
         // Loops through available GATT Services.
         for (BluetoothGattService gattService : gattServices) {
             HashMap<String, String> currentServiceData = new HashMap<String, String>();
@@ -228,6 +236,8 @@ public class BleInfoActivity extends AppCompatActivity {
         final BluetoothGattCharacteristic characteristic = mGattCharacteristics.get(2).get(0);
         final int charaProp = characteristic.getProperties();
         if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+
+
             mBluetoothLeService.readCharacteristic(characteristic);
         }
 
@@ -252,6 +262,7 @@ public class BleInfoActivity extends AppCompatActivity {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.ACTION_BONDED);
         //intentFilter.addAction(BluetoothLeService.ACTION_RSSI_CHANGE);
         return intentFilter;
     }
