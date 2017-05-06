@@ -75,6 +75,7 @@
         app:srcCompat="@drawable/stop"
         android:scaleType="fitCenter"
         android:padding="0dp"
+        android:background="@drawable/button_bordless_bg_material"
         />
 
 </RelativeLayout>

@@ -70,6 +70,8 @@ public class BleInfoActivity extends AppCompatActivity {
             @Override public void onClick(View v) {
                 int i = (isOn == 0) ? 1:0;
                 setSwitch(i);
+
+                //integer to byte[]
                 byte b[] = new byte[4];
 
                 b[0] = (byte)( (i & 0xff000000) >>> 24);
@@ -77,7 +79,7 @@ public class BleInfoActivity extends AppCompatActivity {
                 b[2] = (byte)( (i & 0x0000ff00) >>> 8);
                 b[3] = (byte)( (i & 0x000000ff) );
                 isOn = i;
-                Log.d("123",  mGattCharacteristics.size() + "");
+
                 mGattCharacteristics.get(mGattCharacteristics.size() -1).get(0).setValue(b);
                 mBluetoothLeService.writeCharacteristic(mGattCharacteristics.get(mGattCharacteristics.size() -1).get(0));
 
@@ -112,6 +114,7 @@ public class BleInfoActivity extends AppCompatActivity {
     }
 
     @Override
+    //連 or 斷線控制
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.d(TAG, "onOptionsItemSelected");
         switch(item.getItemId()) {
@@ -167,21 +170,16 @@ public class BleInfoActivity extends AppCompatActivity {
                 // user interface.
                 displayGattServices(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+                //抓周邊目前資料
                 String tmp = (String)intent.getExtras().get(EXTRA_DATA);
-                Log.d("data", "111" + tmp + "111");
                 try {
                     setSwitch(Integer.valueOf(tmp.substring(2, tmp.length()-1)));
                 }catch (Exception e){
                     Log.e(TAG, e.toString());
                 }
-
             }else if (BluetoothLeService.ACTION_BONDED.equals(action)){
                 mBluetoothLeService.connect(mDeviceAddress);
             }
-            //else if (BluetoothLeService.ACTION_RSSI_CHANGE.equals(action)) {
-            //    int rssi = intent.getIntExtra("Rssi", 0);
-            //    txtConnectState.setText(rssi + "");
-            //}
         }
     };
 
@@ -198,6 +196,7 @@ public class BleInfoActivity extends AppCompatActivity {
         if (gattServices == null) return;
         String uuid = null;
 
+        //存資料
         ArrayList<HashMap<String, String>> gattServiceData = new ArrayList<HashMap<String, String>>();
         ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicData
             = new ArrayList<ArrayList<HashMap<String, String>>>();
@@ -236,8 +235,6 @@ public class BleInfoActivity extends AppCompatActivity {
         final BluetoothGattCharacteristic characteristic = mGattCharacteristics.get(2).get(0);
         final int charaProp = characteristic.getProperties();
         if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-
-
             mBluetoothLeService.readCharacteristic(characteristic);
         }
 
@@ -263,7 +260,6 @@ public class BleInfoActivity extends AppCompatActivity {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         intentFilter.addAction(BluetoothLeService.ACTION_BONDED);
-        //intentFilter.addAction(BluetoothLeService.ACTION_RSSI_CHANGE);
         return intentFilter;
     }
 }
