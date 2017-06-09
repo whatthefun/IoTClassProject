@@ -23,6 +23,7 @@ import java.util.List;
  */
 
 public class BluetoothLeService extends Service {
+
     private final static String TAG = BluetoothLeService.class.getSimpleName();
 
     private MyBinder mBinder = new MyBinder();
@@ -64,6 +65,7 @@ public class BluetoothLeService extends Service {
                 mConnectionState = STATE_DISCONNECTED;
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
+
             }
         }
 

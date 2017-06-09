@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/fb_login"
+        android:title="@string/fb_login"
+        android:orderInCategory="100"
+        android:icon="@drawable/facebook_icon"
+        app:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/fb_logout"
+        android:title="@string/fb_logout"
+        android:orderInCategory="101"
+        app:showAsAction="ifRoom|withText"/>
+</menu>
