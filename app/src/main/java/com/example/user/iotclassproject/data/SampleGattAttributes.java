@@ -1,4 +1,4 @@
-package com.example.user.iotclassproject;
+package com.example.user.iotclassproject.data;
 
 import java.util.HashMap;
 

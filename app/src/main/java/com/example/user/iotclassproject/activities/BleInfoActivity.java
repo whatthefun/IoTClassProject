@@ -1,4 +1,4 @@
-package com.example.user.iotclassproject.view;
+package com.example.user.iotclassproject.activities;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
@@ -8,8 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -17,9 +19,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.example.user.iotclassproject.BluetoothLeService;
 import com.example.user.iotclassproject.R;
-import com.example.user.iotclassproject.SampleGattAttributes;
+import com.example.user.iotclassproject.data.MyRSA;
+import com.example.user.iotclassproject.data.SampleGattAttributes;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,12 +40,14 @@ public class BleInfoActivity extends AppCompatActivity {
     private final static String TAG = BleInfoActivity.class.getSimpleName();
     private TextView txtConnectState, txtUUID;
     private ImageButton btnOpener;
+    private FloatingActionButton fab;
     private boolean mConnected = false;
     private BluetoothLeService mBluetoothLeService;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
         new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     private String mDeviceAddress;
     private int isOn = 0;
+    private MyRSA RSA = new MyRSA();
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +61,24 @@ public class BleInfoActivity extends AppCompatActivity {
         txtUUID =  (TextView) findViewById(R.id.txtUUID);
         txtConnectState =  (TextView) findViewById(R.id.txtConnectState);
         txtConnectState.setText(R.string.disconnected);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                SharedPreferences preferences = getSharedPreferences("result", MODE_PRIVATE);
+                String private_key = preferences.getString("private_key", "");
+                String public_key = preferences.getString("public_key", "");
+                Toast.makeText(BleInfoActivity.this, private_key + public_key + "??", Toast.LENGTH_SHORT).show();
+                String data = "test";
+                try {
+                    byte[] secret = RSA.encryptByPrivateKeyForSpilt(data.getBytes(StandardCharsets.UTF_8), private_key.getBytes(StandardCharsets.UTF_8));
+                    byte[] bContext = RSA.decryptByPublicKeyForSpilt(secret, public_key.getBytes(StandardCharsets.UTF_8));
+                    String sContext = new String(bContext, "UTF-8");
+                    Toast.makeText(BleInfoActivity.this, sContext + "??", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
         if (intent.getStringExtra("Name") == null){
             getSupportActionBar().setTitle("NoNameDevice");

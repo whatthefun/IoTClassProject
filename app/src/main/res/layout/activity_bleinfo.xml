@@ -41,11 +41,22 @@
         android:layout_alignTop="@+id/UUID"
         />
 
-    <android.support.v4.widget.Space
-        android:layout_width="match_parent"
-        android:layout_height="25dp"
-        android:layout_below="@id/txtUUID"
-        android:id="@+id/space"
+    <TextView
+        android:id="@+id/owner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Owner:"
+        android:textSize="20sp"
+        android:layout_below="@+id/UUID"
+        />
+    <TextView
+        android:id="@+id/txtOwner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="Who"
+        android:textSize="20sp"
+        android:layout_toRightOf="@+id/owner"
+        android:layout_alignTop="@+id/owner"
         />
 
     <TextView
@@ -54,7 +65,7 @@
         android:layout_height="wrap_content"
         android:text="State:"
         android:textSize="20sp"
-        android:layout_below="@+id/space"
+        android:layout_below="@+id/owner"
         />
     <TextView
         android:id="@+id/txtConnectState"
@@ -76,6 +87,19 @@
         android:scaleType="fitCenter"
         android:padding="0dp"
         android:background="@drawable/button_bordless_bg_material"
+        />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_add_black_24dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="20dp"
+        android:layout_marginEnd="20dp"
+        app:backgroundTint="#878787"
+        app:pressedTranslationZ="16dp"
         />
 
 </RelativeLayout>
