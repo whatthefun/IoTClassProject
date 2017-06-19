@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
     private MyAdapter adapter;
     private CallbackManager callbackManager;
     private Server server = new Server();
+    private SharedPreferences sharedPreferences;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -126,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
 
         mHandler = new Handler();
 
+        //FB
         callbackManager = CallbackManager.Factory.create();
         LoginManager.getInstance()
             .registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
@@ -135,42 +137,51 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
                     server.login(loginResult.getAccessToken().getToken(), new Server.okHttpCallback() {
                         @Override public void onSuccess(JSONObject result) {
                             saveData(result);
+                            sharedPreferences = getSharedPreferences("result", MODE_PRIVATE);
+                            Log.d(TAG, "key: " + sharedPreferences.getString("private_key", null));
+                            //如果還沒有金鑰
+                            if (sharedPreferences.getString("private_key", null) == null) {
+                                Log.d(TAG, "key is null.");
+                                String token = sharedPreferences.getString("access_token", null);
+                                String token_type = sharedPreferences.getString("token_type", null);
+
+                                //region save key
+                                server.generalKey(token, token_type, new Server.okHttpCallback() {
+                                    @Override public void onSuccess(JSONObject result) {
+                                        Log.d(TAG, "onSuccess: " + result);
+                                        try {
+                                            sharedPreferences.edit()
+                                                .putString("private_key", result.getString("private_key"))
+                                                .putString("public_key", result.getString("public_key"))
+                                                .apply();
+                                            Log.d(TAG, "key: " + result.getString("private_key") + ", " + result.getString("public_key"));
+                                        } catch (JSONException e) {
+                                            Log.e(TAG, "onSaveKeySuccess: " + e.toString());
+                                        }
+                                    }
+                                });
+                                //endregion
+
+                                //region save username
+                                server.getUsername(token, token_type, new Server.okHttpCallback() {
+                                    @Override public void onSuccess(JSONObject result) {
+                                        try {
+                                            Log.d(TAG, "result: " + result);
+                                            Log.d(TAG, "username: " + result.getString("username"));
+                                            sharedPreferences.edit()
+                                                .putString("username", result.getString("username"))
+                                                .apply();
+                                        } catch (JSONException e) {
+                                            Log.e(TAG, "onGetUsernameSuccess: " + e.toString());
+                                        }
+                                    }
+                                });
+                                //endregion
+                            }
                         }
                     });
 
-                    final SharedPreferences sharedPreferences = getSharedPreferences("result", MODE_PRIVATE);
-                    //如果還沒有金鑰
-                    if (sharedPreferences.getString("private_key", null) == null) {
 
-                        String token = sharedPreferences.getString("access_token", null);
-                        String token_type = sharedPreferences.getString("token_type", null);
-                        server.generalKey(token, token_type, new Server.okHttpCallback() {
-                            @Override public void onSuccess(JSONObject result) {
-                                Log.d(TAG, "onSuccess: key is null.");
-                                try {
-                                    sharedPreferences.edit()
-                                        .putString("private_key", result.getString("private_key"))
-                                        .putString("public_key", result.getString("public_key"))
-                                        .apply();
-                                    Log.d(TAG, "key: " + result.getString("private_key") + ", " + result.getString("public_key"));
-                                } catch (JSONException e) {
-                                    Log.e(TAG, "onSaveKeySuccess: " + e.toString());
-                                }
-                            }
-                        });
-                        server.getUsername(token, token_type, new Server.okHttpCallback() {
-                            @Override public void onSuccess(JSONObject result) {
-                                try {
-                                    Log.d(TAG, "username: " + result.getString("username"));
-                                    sharedPreferences.edit()
-                                        .putString("username", result.getString("username"))
-                                        .apply();
-                                } catch (JSONException e) {
-                                    Log.e(TAG, "onGetUsernameSuccess: " + e.toString());
-                                }
-                            }
-                        });
-                    }
                 }
 
                 @Override public void onCancel() {}
@@ -297,7 +308,7 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
     }
 
     private void saveData(JSONObject result) {
-        SharedPreferences sharedPreferences = getSharedPreferences("result", MODE_PRIVATE);
+        sharedPreferences = getSharedPreferences("result", MODE_PRIVATE);
         try {
             sharedPreferences.edit()
                 .putString("access_token", result.getString("access_token"))

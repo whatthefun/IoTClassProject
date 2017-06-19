@@ -19,7 +19,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 import com.example.user.iotclassproject.BluetoothLeService;
 import com.example.user.iotclassproject.R;
 import com.example.user.iotclassproject.data.MyRSA;
@@ -67,13 +66,14 @@ public class BleInfoActivity extends AppCompatActivity {
                 SharedPreferences preferences = getSharedPreferences("result", MODE_PRIVATE);
                 String private_key = preferences.getString("private_key", "");
                 String public_key = preferences.getString("public_key", "");
-                Toast.makeText(BleInfoActivity.this, private_key + public_key + "??", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(BleInfoActivity.this, private_key + public_key + "??", Toast.LENGTH_SHORT).show();
                 String data = "test";
                 try {
-                    byte[] secret = RSA.encryptByPrivateKeyForSpilt(data.getBytes(StandardCharsets.UTF_8), private_key.getBytes(StandardCharsets.UTF_8));
-                    byte[] bContext = RSA.decryptByPublicKeyForSpilt(secret, public_key.getBytes(StandardCharsets.UTF_8));
+                    byte[] secret = RSA.encrypt(data.getBytes(StandardCharsets.UTF_8), private_key.getBytes(StandardCharsets.UTF_8));
+                    byte[] bContext = RSA.decrypt(secret, public_key.getBytes(StandardCharsets.UTF_8));
                     String sContext = new String(bContext, "UTF-8");
-                    Toast.makeText(BleInfoActivity.this, sContext + "??", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(BleInfoActivity.this, sContext + "??", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "plain: " + sContext);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

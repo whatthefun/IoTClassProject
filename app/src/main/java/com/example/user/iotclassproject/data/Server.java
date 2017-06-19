@@ -66,8 +66,10 @@ public class Server {
 
     public void generalKey(String token, String token_type , final okHttpCallback callback){
         if (token == null || token_type == null){
+            Log.d(TAG, "token, token_type are null.");
             return;
         }
+        Log.d(TAG, "not null.");
         OkHttpClient okHttpClient = new OkHttpClient();
         Request.Builder requestBuilder = new Request.Builder().url(KEY_ADDRESS + "generate_private_key/");
         requestBuilder.method("GET", null);
@@ -82,7 +84,7 @@ public class Server {
 
             @Override public void onResponse(Call call, Response response) throws IOException {
                 Log.d(TAG, "onGeneralKeyResponse: " + response.toString());
-                Log.d(TAG, "onGeneralKeyResponse: " + response.body().string());
+                //Log.d(TAG, "onGeneralKeyResponse: " + response.body().string());only can get string() once
                 if (response.isSuccessful()){
                     Log.d(TAG, "onLoginResponse: Successful");
                     try {
@@ -92,9 +94,11 @@ public class Server {
                         Log.e(TAG, "onResponse: " + e.toString());
                     }catch (Exception e){
                         Log.e(TAG, "onResponse: " + e.toString());
+                    }finally {
+                        response.body().close();
                     }
                 }
-                response.body().close();
+
             }
         });
     }
@@ -124,9 +128,11 @@ public class Server {
                         callback.onSuccess(result);
                     } catch (JSONException e) {
                         Log.e(TAG, "onResponse: " + e.toString());
+                    }finally {
+                        response.body().close();
                     }
                 }
-                response.body().close();
+
             }
         });
     }

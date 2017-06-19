@@ -21,7 +21,7 @@ public class SettingsActivity extends PreferenceActivity {
         Log.d(TAG, "onCreate: " + sharedPreferences.getString("username", null));
         username = (Preference)findPreference("username");
 
-        username.setSummary(sharedPreferences.getString("username", null));
+        username.setSummary(sharedPreferences.getString("username", "null"));
 
     }
 
