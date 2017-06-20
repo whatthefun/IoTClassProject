@@ -150,9 +150,16 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
                                     @Override public void onSuccess(JSONObject result) {
                                         Log.d(TAG, "onSuccess: " + result);
                                         try {
+                                            String private_key = result.getString("private_key");
+                                            private_key = private_key.replace("-----BEGIN ENCRYPTED PRIVATE KEY-----", "");
+                                            private_key = private_key.replace("-----END ENCRYPTED PRIVATE KEY-----", "");
+
+                                            String public_key = result.getString("public_key");
+                                            public_key = public_key.replace("-----BEGIN RSA PUBLIC KEY-----", "");
+                                            public_key = public_key.replace("-----END RSA PUBLIC KEY-----", "");
                                             sharedPreferences.edit()
-                                                .putString("private_key", result.getString("private_key"))
-                                                .putString("public_key", result.getString("public_key"))
+                                                .putString("private_key", private_key)
+                                                .putString("public_key", public_key)
                                                 .apply();
                                             Log.d(TAG, "key: " + result.getString("private_key") + ", " + result.getString("public_key"));
                                         } catch (JSONException e) {

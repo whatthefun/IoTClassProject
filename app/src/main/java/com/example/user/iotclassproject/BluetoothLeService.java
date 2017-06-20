@@ -28,7 +28,7 @@ public class BluetoothLeService extends Service {
 
     private MyBinder mBinder = new MyBinder();
     private BluetoothManager mBluetoothManager;
-    private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     private String mBluetoothDeviceAddress;
     private BluetoothGatt mBluetoothGatt;
     private int mConnectionState = STATE_DISCONNECTED;

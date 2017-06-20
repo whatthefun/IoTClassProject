@@ -23,6 +23,7 @@ import android.widget.TextView;
 import com.example.user.iotclassproject.BluetoothLeService;
 import com.example.user.iotclassproject.R;
 import com.example.user.iotclassproject.data.MyRSA;
+import com.example.user.iotclassproject.data.MyTask;
 import com.example.user.iotclassproject.data.SampleGattAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,11 +38,11 @@ import static com.example.user.iotclassproject.BluetoothLeService.EXTRA_DATA;
 public class BleInfoActivity extends AppCompatActivity {
 
     private final static String TAG = BleInfoActivity.class.getSimpleName();
-    private TextView txtConnectState, txtUUID;
-    private ImageButton btnOpener;
+    private TextView txtConnectState;
+    private ImageButton btnOpener, imgBtnOwner;
     private FloatingActionButton fab;
     private boolean mConnected = false;
-    private BluetoothLeService mBluetoothLeService;
+    private BluetoothLeService mBluetoothLeService = new BluetoothLeService();
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
         new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     private String mDeviceAddress;
@@ -55,9 +56,9 @@ public class BleInfoActivity extends AppCompatActivity {
         Intent intent = getIntent();
 
         mDeviceAddress = intent.getStringExtra("MAC");
-        ((TextView) findViewById(R.id.txtMAC)).setText(mDeviceAddress);
-        //String UUID = intent.getStringExtra("UUID");
-        txtUUID =  (TextView) findViewById(R.id.txtUUID);
+        //((TextView) findViewById(R.id.txtMAC)).setText(mDeviceAddress);
+        ////String UUID = intent.getStringExtra("UUID");
+        //txtUUID =  (TextView) findViewById(R.id.txtUUID);
         txtConnectState =  (TextView) findViewById(R.id.txtConnectState);
         txtConnectState.setText(R.string.disconnected);
         fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -66,15 +67,21 @@ public class BleInfoActivity extends AppCompatActivity {
                 SharedPreferences preferences = getSharedPreferences("result", MODE_PRIVATE);
                 String private_key = preferences.getString("private_key", "");
                 String public_key = preferences.getString("public_key", "");
-                //Toast.makeText(BleInfoActivity.this, private_key + public_key + "??", Toast.LENGTH_SHORT).show();
-                String data = "test";
-                try {
+                Log.d(TAG, "private_key: " + private_key);
+                Log.d(TAG, "public_key: " + public_key);
 
-                    byte[] secret = RSA.encrypt(data.getBytes(), private_key.getBytes());
-                    byte[] bContext = RSA.decrypt(secret, public_key.getBytes());
-                    String sContext = new String(bContext, "UTF-8");
-                    byte[] encoded = Base64.encode(bContext, 0);
-                    String printMe = new String(encoded, "US-ASCII");
+                String data = "0";
+                try {
+                    byte[] base64_data = Base64.encode(data.getBytes(), 0);
+                    byte[] base64_privateKey = Base64.decode(private_key, Base64.DEFAULT);
+                    byte[] secret = RSA.encrypt(base64_data, base64_privateKey);
+                    Log.d(TAG, "Length: " + secret.length);
+
+                    byte[] base64_publicKey = Base64.decode(public_key, Base64.DEFAULT);
+                    byte[] bContext = RSA.decrypt(secret, base64_publicKey);
+
+                    byte[] encoded = Base64.decode(bContext, 0);
+                    String printMe = new String(encoded, "UTF-8");
                     Log.d(TAG, "plain: " + printMe);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -113,6 +120,35 @@ public class BleInfoActivity extends AppCompatActivity {
             }
         });
 
+        imgBtnOwner = (ImageButton) findViewById(R.id.imgBtnOwner);
+        imgBtnOwner.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                SharedPreferences preferences = getSharedPreferences("result", MODE_PRIVATE);
+                String public_key = preferences.getString("public_key", "");
+                Log.d(TAG, "length: " + public_key.length());
+                String owner = preferences.getString("owner", "");
+                String key1 = "*" + public_key.substring(0,14);
+                String key2 = public_key.substring(15) + "*";
+
+                MyTask task = new MyTask();
+                task.execute(mGattCharacteristics);
+
+                //int i = 0;
+                //while (i < 10){
+                //    mGattCharacteristics.get(mGattCharacteristics.size() -1).get(2).setValue(i + "0123456789012345678");
+                //    mBluetoothLeService.writeCharacteristic(mGattCharacteristics.get(mGattCharacteristics.size() -1).get(2));
+                //}
+
+                //mGattCharacteristics.get(mGattCharacteristics.size() -1).get(2).setValue(key1);
+                //mBluetoothLeService.writeCharacteristic(mGattCharacteristics.get(mGattCharacteristics.size() -1).get(2));
+
+                //mGattCharacteristics.get(mGattCharacteristics.size() -1).get(1).setValue(owner);
+                //mBluetoothLeService.writeCharacteristic(mGattCharacteristics.get(mGattCharacteristics.size() -1).get(1));
+                //
+                //mGattCharacteristics.get(mGattCharacteristics.size() -1).get(2).setValue(key2);
+                //mBluetoothLeService.writeCharacteristic(mGattCharacteristics.get(mGattCharacteristics.size() -1).get(2));
+            }
+        });
 
     }
 
@@ -256,7 +292,7 @@ public class BleInfoActivity extends AppCompatActivity {
             }
             mGattCharacteristics.add(charas);
             gattCharacteristicData.add(gattCharacteristicGroupData);
-            txtUUID.setText(uuid);
+
         }
 
         final BluetoothGattCharacteristic characteristic = mGattCharacteristics.get(2).get(0);
