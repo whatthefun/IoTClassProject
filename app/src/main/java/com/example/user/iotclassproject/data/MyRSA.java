@@ -16,8 +16,6 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Created by YUAN on 2017/6/13.
@@ -288,14 +286,14 @@ public class MyRSA {
         return bytes;
     }
 
-    public byte[] encrypt(byte[] encrypted, byte[] privateKey){
+    public byte[] encrypt(byte[] encrypted, byte[] bPrivateKey){
         Cipher cipher = null;
         try {
             cipher = Cipher.getInstance("RSA");
-
-            SecretKey originalKey = new SecretKeySpec(privateKey, 0, privateKey.length, "RSA");
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+            PrivateKey privateKey = kf.generatePrivate(new PKCS8EncodedKeySpec(bPrivateKey));
             // 加密
-            cipher.init(Cipher.ENCRYPT_MODE, originalKey);
+            cipher.init(Cipher.ENCRYPT_MODE, privateKey);
 
             byte[] enBytes = cipher.doFinal(encrypted);
 
@@ -310,17 +308,20 @@ public class MyRSA {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
             e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
         }
-
         return null;
     }
 
-    public byte[] decrypt(byte[] encrypted, byte[] publicKey){
+    public byte[] decrypt(byte[] encrypted, byte[] bPublicKey){
         Cipher cipher = null;
         try {
             cipher = Cipher.getInstance("RSA");
-            SecretKey originalKey = new SecretKeySpec(publicKey, 0, publicKey.length, "RSA");
-            cipher.init(Cipher.DECRYPT_MODE, originalKey);
+            KeyFactory kf = KeyFactory.getInstance("RSA");
+
+            PublicKey publicKey = kf.generatePublic(new X509EncodedKeySpec(bPublicKey));
+            cipher.init(Cipher.DECRYPT_MODE, publicKey);
             //先将转为base64编码的加密后的数据转化为byte数组
             //byte[] enBytes = base64Dec(str);
             //解密称为byte数组，应该为字符串数组最后转化为字符串
@@ -337,7 +338,11 @@ public class MyRSA {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
             e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
         }
         return null;
     }
+
+
 }

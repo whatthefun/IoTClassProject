@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,7 +24,6 @@ import com.example.user.iotclassproject.BluetoothLeService;
 import com.example.user.iotclassproject.R;
 import com.example.user.iotclassproject.data.MyRSA;
 import com.example.user.iotclassproject.data.SampleGattAttributes;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,11 +69,13 @@ public class BleInfoActivity extends AppCompatActivity {
                 //Toast.makeText(BleInfoActivity.this, private_key + public_key + "??", Toast.LENGTH_SHORT).show();
                 String data = "test";
                 try {
-                    byte[] secret = RSA.encrypt(data.getBytes(StandardCharsets.UTF_8), private_key.getBytes(StandardCharsets.UTF_8));
-                    byte[] bContext = RSA.decrypt(secret, public_key.getBytes(StandardCharsets.UTF_8));
+
+                    byte[] secret = RSA.encrypt(data.getBytes(), private_key.getBytes());
+                    byte[] bContext = RSA.decrypt(secret, public_key.getBytes());
                     String sContext = new String(bContext, "UTF-8");
-                    //Toast.makeText(BleInfoActivity.this, sContext + "??", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "plain: " + sContext);
+                    byte[] encoded = Base64.encode(bContext, 0);
+                    String printMe = new String(encoded, "US-ASCII");
+                    Log.d(TAG, "plain: " + printMe);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
