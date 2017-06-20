@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,6 +20,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import com.example.user.iotclassproject.BluetoothLeService;
+import com.example.user.iotclassproject.MyDialog;
 import com.example.user.iotclassproject.R;
 import com.example.user.iotclassproject.data.MyRSA;
 import com.example.user.iotclassproject.data.MyTask;
@@ -35,7 +35,7 @@ import static com.example.user.iotclassproject.BluetoothLeService.EXTRA_DATA;
  * Created by YUAN on 2017/04/25.
  */
 
-public class BleInfoActivity extends AppCompatActivity {
+public class BleInfoActivity extends AppCompatActivity implements MyDialog.DialogListener {
 
     private final static String TAG = BleInfoActivity.class.getSimpleName();
     private TextView txtConnectState;
@@ -64,28 +64,30 @@ public class BleInfoActivity extends AppCompatActivity {
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                SharedPreferences preferences = getSharedPreferences("result", MODE_PRIVATE);
-                String private_key = preferences.getString("private_key", "");
-                String public_key = preferences.getString("public_key", "");
-                Log.d(TAG, "private_key: " + private_key);
-                Log.d(TAG, "public_key: " + public_key);
-
-                String data = "0";
-                try {
-                    byte[] base64_data = Base64.encode(data.getBytes(), 0);
-                    byte[] base64_privateKey = Base64.decode(private_key, Base64.DEFAULT);
-                    byte[] secret = RSA.encrypt(base64_data, base64_privateKey);
-                    Log.d(TAG, "Length: " + secret.length);
-
-                    byte[] base64_publicKey = Base64.decode(public_key, Base64.DEFAULT);
-                    byte[] bContext = RSA.decrypt(secret, base64_publicKey);
-
-                    byte[] encoded = Base64.decode(bContext, 0);
-                    String printMe = new String(encoded, "UTF-8");
-                    Log.d(TAG, "plain: " + printMe);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                //SharedPreferences preferences = getSharedPreferences("result", MODE_PRIVATE);
+                //String private_key = preferences.getString("private_key", "");
+                //String public_key = preferences.getString("public_key", "");
+                //Log.d(TAG, "private_key: " + private_key);
+                //Log.d(TAG, "public_key: " + public_key);
+                //
+                //String data = "0";
+                //try {
+                //    byte[] base64_data = Base64.encode(data.getBytes(), 0);
+                //    byte[] base64_privateKey = Base64.decode(private_key, Base64.DEFAULT);
+                //    byte[] secret = RSA.encrypt(base64_data, base64_privateKey);
+                //    Log.d(TAG, "Length: " + secret.length);
+                //
+                //    byte[] base64_publicKey = Base64.decode(public_key, Base64.DEFAULT);
+                //    byte[] bContext = RSA.decrypt(secret, base64_publicKey);
+                //
+                //    byte[] encoded = Base64.decode(bContext, 0);
+                //    String printMe = new String(encoded, "UTF-8");
+                //    Log.d(TAG, "plain: " + printMe);
+                //} catch (Exception e) {
+                //    e.printStackTrace();
+                //}
+                MyDialog dialog = new MyDialog();
+                dialog.show(getFragmentManager(), TAG);
             }
         });
 
@@ -324,5 +326,9 @@ public class BleInfoActivity extends AppCompatActivity {
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         intentFilter.addAction(BluetoothLeService.ACTION_BONDED);
         return intentFilter;
+    }
+
+    @Override public void onDialogPositiveClick(String username) {
+
     }
 }
