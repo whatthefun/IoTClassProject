@@ -23,7 +23,6 @@ import com.example.user.iotclassproject.BluetoothLeService;
 import com.example.user.iotclassproject.MyDialog;
 import com.example.user.iotclassproject.R;
 import com.example.user.iotclassproject.data.MyRSA;
-import com.example.user.iotclassproject.data.MyTask;
 import com.example.user.iotclassproject.data.SampleGattAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,7 +37,7 @@ import static com.example.user.iotclassproject.BluetoothLeService.EXTRA_DATA;
 public class BleInfoActivity extends AppCompatActivity implements MyDialog.DialogListener {
 
     private final static String TAG = BleInfoActivity.class.getSimpleName();
-    private TextView txtConnectState;
+    private TextView txtConnectState, txtOwner;
     private ImageButton btnOpener, imgBtnOwner;
     private FloatingActionButton fab;
     private boolean mConnected = false;
@@ -59,7 +58,8 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
         //((TextView) findViewById(R.id.txtMAC)).setText(mDeviceAddress);
         ////String UUID = intent.getStringExtra("UUID");
         //txtUUID =  (TextView) findViewById(R.id.txtUUID);
-        txtConnectState =  (TextView) findViewById(R.id.txtConnectState);
+        txtOwner = (TextView) findViewById(R.id.txtOwner);
+        txtConnectState = (TextView) findViewById(R.id.txtConnectState);
         txtConnectState.setText(R.string.disconnected);
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -91,9 +91,9 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
             }
         });
 
-        if (intent.getStringExtra("Name") == null){
+        if (intent.getStringExtra("Name") == null) {
             getSupportActionBar().setTitle("NoNameDevice");
-        }else {
+        } else {
             getSupportActionBar().setTitle(intent.getStringExtra("Name"));
         }
 
@@ -104,21 +104,20 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
         btnOpener = (ImageButton) findViewById(R.id.btnOpener);
         btnOpener.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
-                int i = (isOn == 0) ? 1:0;
-                setSwitch(i);
+                if (isOn == 0) {
+                    isOn = 1;
+                } else if (isOn == 1) {
+                    isOn = 0;
+                }
+                setSwitch(isOn);
 
-                //integer to byte[]
-                byte b[] = new byte[4];
+                SharedPreferences preferences = getSharedPreferences("result", 0);
+                String username = preferences.getString("username", "");
+                String value = username + "/" + isOn;
 
-                b[0] = (byte)( (i & 0xff000000) >>> 24);
-                b[1] = (byte)( (i & 0x00ff0000) >>> 16);
-                b[2] = (byte)( (i & 0x0000ff00) >>> 8);
-                b[3] = (byte)( (i & 0x000000ff) );
-                isOn = i;
-
-                mGattCharacteristics.get(mGattCharacteristics.size() -1).get(0).setValue(b);
-                mBluetoothLeService.writeCharacteristic(mGattCharacteristics.get(mGattCharacteristics.size() -1).get(0));
-
+                mGattCharacteristics.get(mGattCharacteristics.size() - 1).get(0).setValue(value);
+                mBluetoothLeService.writeCharacteristic(
+                    mGattCharacteristics.get(mGattCharacteristics.size() - 1).get(0));
             }
         });
 
@@ -126,14 +125,10 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
         imgBtnOwner.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 SharedPreferences preferences = getSharedPreferences("result", MODE_PRIVATE);
-                String public_key = preferences.getString("public_key", "");
-                Log.d(TAG, "length: " + public_key.length());
-                String owner = preferences.getString("owner", "");
-                String key1 = "*" + public_key.substring(0,14);
-                String key2 = public_key.substring(15) + "*";
-
-                MyTask task = new MyTask();
-                task.execute(mGattCharacteristics);
+                String username = preferences.getString("username", "");
+                mGattCharacteristics.get(mGattCharacteristics.size() - 1).get(1).setValue(username);
+                mBluetoothLeService.writeCharacteristic(
+                    mGattCharacteristics.get(mGattCharacteristics.size() - 1).get(1));
 
                 //int i = 0;
                 //while (i < 10){
@@ -151,7 +146,6 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
                 //mBluetoothLeService.writeCharacteristic(mGattCharacteristics.get(mGattCharacteristics.size() -1).get(2));
             }
         });
-
     }
 
     @Override protected void onResume() {
@@ -164,8 +158,7 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
         unregisterReceiver(mGattUpdateReceiver);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    @Override public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.gatt_services, menu);
         Log.d(TAG, "onCreateOptionsMenu");
         if (mConnected) {
@@ -182,7 +175,7 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
     //連 or 斷線控制
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.d(TAG, "onOptionsItemSelected");
-        switch(item.getItemId()) {
+        switch (item.getItemId()) {
             case R.id.menu_connect:
                 mBluetoothLeService.connect(mDeviceAddress);
                 return true;
@@ -198,8 +191,7 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
 
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder service) {
+        @Override public void onServiceConnected(ComponentName componentName, IBinder service) {
             mBluetoothLeService = ((BluetoothLeService.MyBinder) service).getService();
             if (!mBluetoothLeService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
@@ -209,15 +201,13 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
             mBluetoothLeService.connect(mDeviceAddress);
         }
 
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
+        @Override public void onServiceDisconnected(ComponentName componentName) {
             mBluetoothLeService = null;
         }
     };
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
+        @Override public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {//已連線
                 mConnected = true;
@@ -236,23 +226,23 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
                 displayGattServices(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
                 //抓周邊目前資料
-                String tmp = (String)intent.getExtras().get(EXTRA_DATA);
+                String tmp = (String) intent.getExtras().get(EXTRA_DATA);
                 try {
-                    setSwitch(Integer.valueOf(tmp.substring(2, tmp.length()-1)));
-                }catch (Exception e){
+                    setSwitch(Integer.valueOf(tmp.substring(2, tmp.length() - 1)));
+                } catch (Exception e) {
                     Log.e(TAG, e.toString());
                 }
-            }else if (BluetoothLeService.ACTION_BONDED.equals(action)){
+            } else if (BluetoothLeService.ACTION_BONDED.equals(action)) {
                 mBluetoothLeService.connect(mDeviceAddress);
             }
         }
     };
 
-    private void setSwitch(int isOn){
+    private void setSwitch(int isOn) {
         Log.d("setSwitch", isOn + "");
-        if (isOn == 0){
+        if (isOn == 0) {
             btnOpener.setImageResource(R.drawable.stop);
-        }else if(isOn == 1){
+        } else if (isOn == 1) {
             btnOpener.setImageResource(R.drawable.ok);
         }
     }
@@ -262,9 +252,10 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
         String uuid = null;
 
         //存資料
-        ArrayList<HashMap<String, String>> gattServiceData = new ArrayList<HashMap<String, String>>();
-        ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicData
-            = new ArrayList<ArrayList<HashMap<String, String>>>();
+        ArrayList<HashMap<String, String>> gattServiceData =
+            new ArrayList<HashMap<String, String>>();
+        ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicData =
+            new ArrayList<ArrayList<HashMap<String, String>>>();
         mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
 
         // Loops through available GATT Services.
@@ -287,36 +278,33 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
                 charas.add(gattCharacteristic);
                 HashMap<String, String> currentCharaData = new HashMap<String, String>();
                 uuid = gattCharacteristic.getUuid().toString();
-                currentCharaData.put(
-                    "Name", SampleGattAttributes.lookup(uuid));
+                currentCharaData.put("Name", SampleGattAttributes.lookup(uuid));
                 currentCharaData.put("UUID", uuid);
                 gattCharacteristicGroupData.add(currentCharaData);
             }
             mGattCharacteristics.add(charas);
             gattCharacteristicData.add(gattCharacteristicGroupData);
-
+        }
+        //Log.d(TAG, "displayGattServices: length" + mGattCharacteristics.get(2).get(1).getStringValue(0));
+        //(mGattCharacteristics.get(mGattCharacteristics.size() -1).get(1).getValue());
+        final byte[] data =
+            mGattCharacteristics.get(mGattCharacteristics.size() - 1).get(1).getValue();
+        if (data != null && data.length > 0) {
+            final StringBuilder stringBuilder = new StringBuilder(data.length);
+            for (byte byteChar : data)
+                stringBuilder.append(String.format("%02X ", byteChar));
+            txtOwner.setText(stringBuilder.toString());
         }
 
-        final BluetoothGattCharacteristic characteristic = mGattCharacteristics.get(2).get(0);
+        txtOwner.setText("000");
+        Log.d(TAG, "displayGattServices: length" + mGattCharacteristics.size());
+        final BluetoothGattCharacteristic characteristic =
+            mGattCharacteristics.get(mGattCharacteristics.size() - 1).get(0);
         final int charaProp = characteristic.getProperties();
         if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
             mBluetoothLeService.readCharacteristic(characteristic);
         }
-
-        //SimpleExpandableListAdapter gattServiceAdapter = new SimpleExpandableListAdapter(
-        //    this,
-        //    gattServiceData,
-        //    android.R.layout.simple_expandable_list_item_2,
-        //    new String[] {"Name", "UUID"},
-        //    new int[] { android.R.id.text1, android.R.id.text2 },
-        //    gattCharacteristicData,
-        //    android.R.layout.simple_expandable_list_item_2,
-        //    new String[] {"NAME", "UUID"},
-        //    new int[] { android.R.id.text1, android.R.id.text2 }
-        //);
-        //mGattServicesList.setAdapter(gattServiceAdapter);
     }
-
 
     private static IntentFilter makeGattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
@@ -329,6 +317,23 @@ public class BleInfoActivity extends AppCompatActivity implements MyDialog.Dialo
     }
 
     @Override public void onDialogPositiveClick(String username) {
+        Log.d(TAG, "onDialogPositiveClick: " + username);
+        SharedPreferences sharedpreferences = getSharedPreferences("result", 0);
+        mGattCharacteristics.get(mGattCharacteristics.size() - 1)
+            .get(2)
+            .setValue(sharedpreferences.getString("username", "") + "/");
+        mBluetoothLeService.writeCharacteristic(
+            mGattCharacteristics.get(mGattCharacteristics.size() - 1).get(2));
 
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Log.e(TAG, "onDialogPositiveClick: " + e.toString() );
+        }
+        mGattCharacteristics.get(mGattCharacteristics.size() - 1)
+            .get(2)
+            .setValue(username);
+        mBluetoothLeService.writeCharacteristic(
+            mGattCharacteristics.get(mGattCharacteristics.size() - 1).get(2));
     }
 }

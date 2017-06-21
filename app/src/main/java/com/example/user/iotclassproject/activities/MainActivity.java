@@ -140,33 +140,33 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
                             sharedPreferences = getSharedPreferences("result", MODE_PRIVATE);
                             Log.d(TAG, "key: " + sharedPreferences.getString("private_key", null));
                             //如果還沒有金鑰
-                            if (sharedPreferences.getString("private_key", null) == null) {
+                            //if (sharedPreferences.getString("private_key", null) == null) {
                                 Log.d(TAG, "key is null.");
                                 String token = sharedPreferences.getString("access_token", null);
                                 String token_type = sharedPreferences.getString("token_type", null);
 
                                 //region save key
-                                server.generalKey(token, token_type, new Server.okHttpCallback() {
-                                    @Override public void onSuccess(JSONObject result) {
-                                        Log.d(TAG, "onSuccess: " + result);
-                                        try {
-                                            String private_key = result.getString("private_key");
-                                            private_key = private_key.replace("-----BEGIN ENCRYPTED PRIVATE KEY-----", "");
-                                            private_key = private_key.replace("-----END ENCRYPTED PRIVATE KEY-----", "");
-
-                                            String public_key = result.getString("public_key");
-                                            public_key = public_key.replace("-----BEGIN RSA PUBLIC KEY-----", "");
-                                            public_key = public_key.replace("-----END RSA PUBLIC KEY-----", "");
-                                            sharedPreferences.edit()
-                                                .putString("private_key", private_key)
-                                                .putString("public_key", public_key)
-                                                .apply();
-                                            Log.d(TAG, "key: " + result.getString("private_key") + ", " + result.getString("public_key"));
-                                        } catch (JSONException e) {
-                                            Log.e(TAG, "onSaveKeySuccess: " + e.toString());
-                                        }
-                                    }
-                                });
+                                //server.generalKey(token, token_type, new Server.okHttpCallback() {
+                                //    @Override public void onSuccess(JSONObject result) {
+                                //        Log.d(TAG, "onSuccess: " + result);
+                                //        try {
+                                //            String private_key = result.getString("private_key");
+                                //            private_key = private_key.replace("-----BEGIN ENCRYPTED PRIVATE KEY-----", "");
+                                //            private_key = private_key.replace("-----END ENCRYPTED PRIVATE KEY-----", "");
+                                //
+                                //            String public_key = result.getString("public_key");
+                                //            public_key = public_key.replace("-----BEGIN RSA PUBLIC KEY-----", "");
+                                //            public_key = public_key.replace("-----END RSA PUBLIC KEY-----", "");
+                                //            sharedPreferences.edit()
+                                //                .putString("private_key", private_key)
+                                //                .putString("public_key", public_key)
+                                //                .apply();
+                                //            Log.d(TAG, "key: " + result.getString("private_key") + ", " + result.getString("public_key"));
+                                //        } catch (JSONException e) {
+                                //            Log.e(TAG, "onSaveKeySuccess: " + e.toString());
+                                //        }
+                                //    }
+                                //});
                                 //endregion
 
                                 //region save username
@@ -184,7 +184,7 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
                                     }
                                 });
                                 //endregion
-                            }
+                            //}
                         }
                     });
 
@@ -238,6 +238,10 @@ public class MainActivity extends AppCompatActivity implements MyAdapter.ListIte
             case R.id.fb_logout:
                 LoginManager.getInstance().logOut();
                 Log.d(TAG, "onOptionsItemSelected: logout");
+                SharedPreferences preferences = getSharedPreferences("result", 0);
+                preferences.edit()
+                    .putString("username", "")
+                    .apply();
                 invalidateOptionsMenu();
                 return true;
             case R.id.action_settings:
